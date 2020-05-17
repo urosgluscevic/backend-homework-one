@@ -43,7 +43,7 @@ const puppeteer = require("puppeteer");
 
     // console.log(parsed)
 
-    const neededValues = ["Vrsta", "Područje", "Lokacija", "Kupatila", "Cijena", "Stambena Površina", "Zemljište", "Parking Mjesta", "Od Mora"]; //list of the values we are searching for
+    const neededValues = ["Vrsta", "Područje", "Lokacija", "Kupatila", "Cijena", "Stambena Površina", "Zemljište", "Parking Mjesta", "Od Mora", "Novogradnja", "Klima Uređaj", "Naslov", "Opis", "Oglasio", "Mobitel", "Oglas Broj", "Zadnja Promjena"]; //list of the values we are searching for
     let stringToAppend = ""; //first we write the values here, then we append it to the csv file
 
     //DESCRIPTION OF THE FOLLOWING FUNCTION:
@@ -53,15 +53,33 @@ const puppeteer = require("puppeteer");
     //Now that I know that the element exists exists in the strongValues, it must also exist in the "parsed" array, but at an index that is one larger that the one in strongValues, because "parsed" also contains the title
     //NOTE: I have not implemented the search for "opis", "klima", "novogradnja", "telefon", "oglasio". These will be done manually
 
+    let offset = 1; // because of the title, the indexes in the "parsed" array and "strongValues" array are shifted by 1
+
     neededValues.forEach((elem)=>{
-        if(strongValues.includes(elem)){
+        if(elem === "Oglasio" || elem === "Mobitel" || elem === "Oglas Broj" || elem === "Zadnja Promjena"){
+            offset = 0; // due to a flaw in the parsing algorythm, the link is separated in 2 arrays, rendering it useless, and nullifying the shift made by the title being at the 0 index in the "parsed" array
+        } else if (elem === "Opis") {
+            offset = -1;
+        } else {
+            offset = 1;
+        }
+
+        if(elem === "Klima Uređaj" || elem === "Novogradnja"){
+            if(strongValues.includes(elem)){
+                stringToAppend += elem + ": " + true + ",";
+            } else {
+                stringToAppend += elem + ": " + false + ",";
+            }
+        } else if (elem === "Naslov"){
+            stringToAppend += elem + ": " + parsed[0] + ",";
+        } else if(strongValues.includes(elem)){
             let index = strongValues.findIndex(
                 item => item.indexOf(elem) > -1
             );
             
-            stringToAppend += parsed[index + 1] + ","
+            stringToAppend += elem+": "+parsed[index + offset] + ","
         } else {
-            stringToAppend += "nepoznato,"
+            stringToAppend += elem+": " + "nepoznato,"
         }
     })
 
