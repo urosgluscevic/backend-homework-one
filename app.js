@@ -25,7 +25,14 @@ const puppeteer = require("puppeteer");
         return data
     })
 
-    // console.log(result)
+    const strongValues = await page.evaluate(()=>{
+        const data = document.querySelectorAll("strong"); //just the values (will be used to check if, for example, "zemljiste" exists)
+        return Array.from(data).map((elem)=>{
+            return elem.innerText;
+        })
+    })
+
+    // console.log(strongValues)
 
     const split = result.split(":"); //beginns the parsing proccess
 
@@ -34,7 +41,31 @@ const puppeteer = require("puppeteer");
         parsed.push(elem.slice(0, elem.indexOf("\n"))) //parses the result
     })
 
-    console.log(parsed)
+    // console.log(parsed)
+
+    const neededValues = ["Vrsta", "Područje", "Lokacija", "Kupatila", "Cijena", "Stambena Površina", "Zemljište", "Parking Mjesta", "Od Mora"]; //list of the values we are searching for
+    let stringToAppend = ""; //first we write the values here, then we append it to the csv file
+
+    //DESCRIPTION OF THE FOLLOWING FUNCTION:
+    //It's purpose is to parse the data from the site and store it in a string, in the exact order that Stevan asked
+    //I used a forEach loop to check if the "oglas" contans the values we are looking for
+    //if that is the case, I get the index of that element, but in the "strongValues" array
+    //Now that I know that the element exists exists in the strongValues, it must also exist in the "parsed" array, but at an index that is one larger that the one in strongValues, because "parsed" also contains the title
+    //NOTE: I have not implemented the search for "opis", "klima", "novogradnja", "telefon", "oglasio". These will be done manually
+
+    neededValues.forEach((elem)=>{
+        if(strongValues.includes(elem)){
+            let index = strongValues.findIndex(
+                item => item.indexOf(elem) > -1
+            );
+            
+            stringToAppend += parsed[index + 1] + ","
+        } else {
+            stringToAppend += "nepoznato,"
+        }
+    })
+
+    console.log(stringToAppend)
 
     await browser.close() //closes the browser (it can't be accessed anymore)
 })()
